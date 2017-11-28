@@ -1,15 +1,16 @@
-#include "graph.c"
+#include "graph.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 #define OK 1 
-
+#define ERROR -1
 Graph * graph_new(int v_size){
     Graph *g = malloc(sizeof(Graph));
     int i;
 
     g->v_size = v_size;
     g->e_size = 0;
-    g->vertices = malloc(sizeof(Vertex));
+    g->v = malloc(sizeof(Vertex));
 
     for(i=0; i< g->v_size; i++){
         g->v[i].con_size = 0;
@@ -30,8 +31,6 @@ int graph_addVertex(Graph *g, int from_vId, int to_vId){
 
     g->v[from_vId].p_t0 = 0;
     g->v[from_vId].p_t1 = 0;
-    g->v[from_vId].e = 0; 
-
     return OK;
 }
 
@@ -40,17 +39,19 @@ int graph_remove(Graph *g){
 
     /* Remove the outgoing vertex of every vertex */
     for (i=0; i<g->v_size; i++){
-        free(g->v[i].to_Id)
+        free(g->v[i].to_Id);
     }
 
-    free(g->v)
-    free(g)
+    free(g->v);
+    free(g);
 
     return OK;
 }
 
 int graph_numEdges(Graph *g){
-    if (graph->e_size == 0){
+    int i;
+
+    if (g->e_size == 0){
         for(i=0; i<g->v_size; i++)
             g->e_size += g->v[i].con_size;
     }
@@ -58,13 +59,25 @@ int graph_numEdges(Graph *g){
     return g->e_size;
 }
 
-/* Insert functions here :
- *  - graph_getVertex
- *  - graph_updateVertex
- *
- *
- */
+int graph_outEdgesCount(Graph *g, int from_vId){
+    if (g != NULL)
+        return g->v[from_vId].con_size;
+    else {
+        printf("Error: Not Allocated Graph \n");
+        return ERROR;
+    }
+}
 
+void graph_updateProb(Graph *g, int from_id, double prob){
+
+    if (graphIsEmpty(g)){
+        printf("Error: Graph Empty \n");
+        return ERROR;
+    }
+
+    
+    g->v[from_id].p_t0 = prob;
+    g->v[from_id].p_t1 = prob;
 
 
 
