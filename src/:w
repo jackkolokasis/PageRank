@@ -1,0 +1,16 @@
+#ifndef __PAGERANK_H
+#define __PAGERANK_H
+#include "graph.h"
+
+Graph *_Graph;
+
+extern pageRank_setGraph(Graph *g);
+
+extern Graph* pageRank_getGraph();
+
+extern void pageRank_init(Graph *g);
+
+extern void pageRank_run(Graph *g);
+
+
+#endif

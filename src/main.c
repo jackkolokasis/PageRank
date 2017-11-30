@@ -2,8 +2,25 @@
 #include "graph.h"
 #include <time.h>
 #include <math.h>
-#include "mpi.h"
+#include <stdlib.h>
+#include <string.h>
+#include <pthread.h>
+#include "pagerank.h"
 
+#define MAX 1024
+#define _ERROR 1
+#define _SUCCESS 0 
+
+int numThreads;     /* Number of threads */
+
+/*
+ * Read Input File.
+ * 
+ * Input dataset is an Edge List File of format: 
+ *  <srcId> <dstId>
+ *
+ * Store all this file in the Graph Object.
+ */
 
 void readInputDataset(char *filename, Graph *g) {
     FILE *file;
@@ -22,55 +39,78 @@ void readInputDataset(char *filename, Graph *g) {
             }
         }
 
-        fclose(file)
+        fclose(file);
     }
 }
 
-/*
- * Initialize vertex with prob=1
- * Sum PR(u)/L(u)
- *
- */
+int checkInputArgs(int num_threads, int numVertex, int numIter){
+    if (num_threads < 1) {
+        printf("Error: Number of threads must be equall or greater of 1\n");
+        return _ERROR;
+    }
 
-pageRank_init(Graph *g){
+    if (numVertex < 1) {
+        printf("Error: Number of vertex is not valid \n");
+        return _ERROR;
+    }
 
+    if (numIter <= 0){
+        printf("Error: Number of itteration must be greater of 1 \n");
+        return _ERROR;
+    }
+
+    return _SUCCESS;
 }
-
 
 void main(int argc, char **argv){
     int rank, size;
-    char *filename; /* Graph input datase file name */
-    int numVertex;  /* Number of vertex */
-    double d=0.85;   /* Dambing factor */
-    int i, j, k;
+    char *filename;     /* Graph input datase file name */
+    int numVertex;      /* Number of vertex */
+    double d=0.85;      /* Dambing factor */
+    int numIter;        /* Number of iterations */
+    int i;              /* Counter */
+    int threadId;         /* Thread Counter */
     double sum;
-    Graph *g;
+    Graph *g;           /* Graph object */
+    pthread_t *thread_handle; /* Maximum number of threads */
 
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-
-    /*Check Input arguments */
-    if (argc < 3) {
-        printf("Error : Input Arguments : <graph filename> <numVertex> \n");
+    /* Check Input arguments */
+    if (argc < 5) {
+        printf("Error : Input Arguments : <numOfThreads> <graph filename> <numVertex> <numIter> \n");
         exit(0);
     }
 
-    strcpy(filename, argv[1]);
-    numVertex = atoi(argv[2]);
+    numThreads = atoi(argv[1]);
+    strcpy(filename, argv[2]);
+    numVertex = atoi(argv[3]);
+    numIter = atoi(argv[4]);
+
+    if (checkInputArgs(numThreads, numVertex, numIter) == 1){
+        exit(0);
+    }
+
+    g = graph_new(numVertex);       /* Create and initialize a graph instance */
+    readInputDataset(filename, g);  /* Read Iput Dataset of Graph. */
     
+    pageRank_setGraph(g);           /* Pass the graph inside the Pagerank class */          
+
+    pageRank_init();
+
+    for(i=0; i< numIter; i++) {
+        for (threadId=0; threadId < numThreads; threadId ++) {
+            /* Run pagerank here */
+            pthread_create(&thread_handle[threadId], NULL, pageRank_run, &threadId);
+        }
+
+        for (threadId = 0; threadId < numThreads; threadId++) {
+        pthread_join(thread_handle[threadId], NULL);
+        }
+    }
+
     /*
-     * Create and initialize a graph instance 
-     * 
+     * Print all the propabilities of the graph 
+     * Put here the code of printing.
+     * print will be a function inside the graph.
+     *
      */
-    
-    g = graph_new(numVertex);
-   
-    readInputdataset(filename, g);
-
-
-
-
-    
-
 }
