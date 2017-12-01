@@ -64,15 +64,17 @@ int checkInputArgs(int num_threads, int numVertex, int numIter){
 
 void main(int argc, char **argv){
     int rank, size;
-    char *filename;     /* Graph input datase file name */
-    int numVertex;      /* Number of vertex */
-    double d=0.85;      /* Dambing factor */
-    int numIter;        /* Number of iterations */
-    int i;              /* Counter */
-    int threadId;         /* Thread Counter */
+    char *filename;              /* Graph input datase file name */
+    int numVertex;               /* Number of vertex */
+    double d=0.85;               /* Dambing factor */
+    int numIter;                 /* Number of iterations */
+    int i;                       /* Counter */
+    int threadId;                /* Thread Counter */
     double sum;
-    Graph *g;           /* Graph object */
-    pthread_t *thread_handle; /* Maximum number of threads */
+    Graph *g;                    /* Graph object */
+    pthread_t *thread_handle;    /* Maximum number of threads */
+    clock_t start, end;          /* Start and End time variables */
+    double elapsed;              /* Elapsed Time */
 
     /* Check Input arguments */
     if (argc < 5) {
@@ -96,16 +98,25 @@ void main(int argc, char **argv){
 
     pageRank_init();
 
+    start = clock();
+
     for(i=0; i< numIter; i++) {
         for (threadId=0; threadId < numThreads; threadId ++) {
+            
             /* Run pagerank here */
             pthread_create(&thread_handle[threadId], NULL, pageRank_run, &threadId);
         }
 
         for (threadId = 0; threadId < numThreads; threadId++) {
-        pthread_join(thread_handle[threadId], NULL);
+            pthread_join(thread_handle[threadId], NULL);
         }
     }
+
+    end = clock();
+
+    elapsed = (double) (end - start) / CLOCKS_PER_SEC;
+
+    printf("\nTotal Time Program Running = %f \n", elapsed);
 
     /*
      * Print all the propabilities of the graph 

@@ -1,6 +1,13 @@
 #ifndef __GRAPH_H_
 #define __GRAPH_H_
 
+/* 
+ * May change the structure of the graph
+ *
+ * from id to 
+ *
+ */
+
 typedef struct _vertex{
     double p_t0;
     double p_t1;
@@ -28,6 +35,5 @@ extern int graph_outEdgesCount(Graph *g, int from_vId);
 
 extern int graph_initProb(Graph *g, int from_id, double prob);
 
-/* Have to complete the interface */ 
 
 #endif
