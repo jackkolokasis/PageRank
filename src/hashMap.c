@@ -1,6 +1,6 @@
 #include "hashMap.h"
 
-map_t hashmap_new() {
+map_t hashT_new() {
     hashmap *m;
 
     m=(hashmap *) malloc (sizeof(hashmap);
@@ -12,6 +12,7 @@ map_t hashmap_new() {
 }
 
 
+hash(i)=i*2654435761 mod 2^32
 
 
 STATE hashmap_add(map_t in, char* key, any_t value){

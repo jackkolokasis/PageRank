@@ -1,52 +1,11 @@
 #include "pagerank.h"
 #include "graph.h"
-#include <pthread.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <pthread.h>
 
+Graph* _Graph;
 int totalThreads;
-
-pthread_mutex_t lock;
-
-/*
- * Adjency Matrix NxN
- *
- * -----------------
- *  0  | 0.5 | 0 | 0
- * -----------------
- * 0.3 |  0  | 0 | 0
- * -----------------
- * 0.3 |  0  | 1 | 0.5
- * -----------------
- * 0.3 | 0.5 | 0 | 0
- * -----------------
- */
-
-void createMatrix(){
-    int i;
-    int j;
-    int numVertex = _Graph->v_size;
-
-    matrix = (double **)calloc(numVertex, sizeof(double *));
-    
-    for(i=0; i<numVertex; i++){
-        matrix[i] = 
-            (double *)calloc (numVertex, sizeof(double));
-    }
-
-    for (i=0; i<numVertex; i++){
-        for (j=0; j<_Graph->v[i].con_size; j++) {
-            int id_x = _Graph->v[i].to_Id[j];
-
-            matrix[id_x][i] = 1/_Graph->v[i].con_size;
-        }
-    }
-
-    /* Instead of matrix is better to have two parallel
-     * arrays inside
-     * one for from_Id and one for the weight
-     */
-}
-
 
 /*
  * Pagerank Initialization Propabilities
@@ -57,19 +16,34 @@ void createMatrix(){
  * PR(v) = 1/N where N is the total number of vertex.
  */
 
-void pageRank_init(){
-
+void pageRank_init(Graph *g, int threads){
     int i;
-    int numVertex = graph_numVertices(_Graph);
-    int prob = 1/numVertex;
+    int numVertex;    
+    double prob;
+
+    #ifdef DEBUG_T
+    printf("\n================================\n");
+    printf("\nPagerank INIT\n");
+    printf("\n================================\n");
+    #endif
+   
+    _Graph = g;
+    numVertex = graph_numVertices(_Graph);
+    totalThreads = threads;
+    prob = 1.0/numVertex;
 
     for (i=0; i<numVertex; i++){
-        graph_initProb(_Graph, i, prob);
+        graph_setVertexProb(_Graph, i, prob, 1);
     }
 
-    createMatrix();
-}
+    #ifdef DEBUG_T
+    printf("\n================================\n");
+    printf("\nPagerank INIT DONE !!!\n");
+    printf("\n================================\n");
+    #endif
 
+}
+    
 /*
  * Pagerank Running the algorithm.
  *
@@ -82,44 +56,68 @@ void pageRank_init(){
  *
  */
 
-void* pageRank_run(void *args){
-    int tId = *(int *) args;    /* Thread Id */
-    int l_bound;                /* Lower Bound */
-    int u_bound;                /* Upper Bound */
-    int numVertex = _Graph->v_size;
+void* pageRank_run(void *arguments){
+    int tId = (int) arguments;        /* Thread Id */
+    int l_bound;                    /* Lower Bound */
+    int u_bound;                    /* Upper Bound */
+    int numVertex = graph_numVertices(_Graph);   /* Total Vertex */
+    int i, j;
+    double constProb;
+    double sum, prob;
+    int inDegree, tmpvId;
 
-    l_bound = (numVertex/totalThreads) *tId;
+    l_bound = (numVertex/totalThreads) *(tId);
     u_bound = l_bound + (numVertex/totalThreads);
+   
+    #ifdef DEBUG_T
+    printf("================================");
+    printf("\nStart Running Thread ID = %d\n", tId);
+    printf("================================");
+    #endif
 
+    if (tId == (totalThreads - 1)){
+        u_bound = u_bound + numVertex%totalThreads;
+    }
 
-    /* Divide the array according the threads ids
-     * Use init probs multiply with.
-     */
+    constProb = 0.15/numVertex;                 /* (1-d)/N */
+    
+    for (i=l_bound; i<u_bound; i++){
+        sum = 0.0;
+        inDegree = graph_inDegree(_Graph, i);
+        
+        for (j=0; j<inDegree; j++){
+            tmpvId = graph_getVertexNeighborId(_Graph, i, j, 0);
+            sum = sum + (graph_getVertexProb(_Graph, tmpvId) / graph_outDegree(_Graph, tmpvId));
+            }
+
+        prob = constProb + sum;
+
+        graph_setVertexProb(_Graph, i, prob, 0);
+    }
+
+    return NULL;
 }
 
 /*
- * Set the Graph to run the pageRank
+ * Update all vertex Propabilities at the end of each superStep with the new
+ * one.
  *
  */
+void pageRank_update(){
+    int i;
+    int vertices = graph_numVertices(_Graph);
 
-void pageRank_setGraph(Graph *g){
-   _Graph = g;
+    for (i=0; i<vertices; i++){
+        graph_updateVertexProb(_Graph, i);
+    }
 }
 
 /*
  * Get the Graph with the new propabilities
  *
  */
+
 Graph* pageRank_getGraph(){
     return _Graph;
 }
 
-void pageRank_stop(){
-    graph_remove(_Graph);
-    pthread_mutex_destroy(&lock);
-}
-
-
-void pageRank_start(int threads){
-    totalThreads = threads;
-}

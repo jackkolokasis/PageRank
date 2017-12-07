@@ -22,27 +22,43 @@ int numThreads;     /* Number of threads */
  * Store all this file in the Graph Object.
  */
 
-void readInputDataset(char *filename, Graph *g) {
+Graph * readInputDataset(char *filename, Graph *g) {
     FILE *file;
     int fromId, toId;
-    int tmp_size;
 
+    #ifdef DEBUG_T
+    printf("\n============================\n");
+    printf("\n Read Input File : START !!!\n");
+    printf("\n============================\n");
+    #endif
+    
     file = fopen(filename, "r");
     if (file == NULL){
         printf("Error: Input Dataset File does not exist");
     }
 
     while (!feof(file)){
-        if (fscanf(file, "%d\t%d\n", &fromId, &toId)){
-            if (graph_addVertex(g, fromId, toId) == 0){
+        if (fscanf(file, "%d %d", &fromId, &toId) == 2){
+            if (graph_addEdge(g, fromId, toId) == 0){
                 printf("Error: Vertex not added to the graph succesfully");
             }
         }
-
-        fclose(file);
     }
+
+    fclose(file);
+
+    #ifdef DEBUG_T
+    printf("\n============================\n");
+    printf("\n Read Input File : DONE !!! \n");
+    printf("\n============================\n");
+    #endif
+    
+    return g;
 }
 
+/* 
+ * Check Input Argumnents
+ */
 int checkInputArgs(int num_threads, int numVertex, int numIter){
     if (num_threads < 1) {
         printf("Error: Number of threads must be equall or greater of 1\n");
@@ -62,66 +78,90 @@ int checkInputArgs(int num_threads, int numVertex, int numIter){
     return _SUCCESS;
 }
 
-void main(int argc, char **argv){
-    int rank, size;
-    char *filename;              /* Graph input datase file name */
+/*
+ * Print the vertex pageRank in a file
+ */
+void printToFile(Graph *g, char *filename){
+    FILE *file;
+    int i;
+    int vertices = graph_numVertices(g);
+
+    file = fopen(filename, "w+");
+    if (file == NULL){
+        printf("Error: Input Dataset File does not exist");
+    }
+
+    fprintf(file, "Vertex Id \t Rank \n");
+
+    for (i=0; i<vertices; i++){
+        fprintf(file, " %d \t %f \n", i+1, graph_getVertexProb(g, i));
+    }
+
+    fclose(file);
+}
+
+int main(int argc, char **argv){
+    char *filename = NULL;              /* Graph input datase file name */
     int numVertex;               /* Number of vertex */
-    double d=0.85;               /* Dambing factor */
     int numIter;                 /* Number of iterations */
     int i;                       /* Counter */
     int threadId;                /* Thread Counter */
-    double sum;
     Graph *g;                    /* Graph object */
-    pthread_t *thread_handle;    /* Maximum number of threads */
+    pthread_t thread_handle[1024];    /* Maximum number of threads */
     clock_t start, end;          /* Start and End time variables */
     double elapsed;              /* Elapsed Time */
+    char *outFileName = NULL;           /* Output File Name */
 
     /* Check Input arguments */
-    if (argc < 5) {
-        printf("Error : Input Arguments : <numOfThreads> <graph filename> <numVertex> <numIter> \n");
+    if (argc < 6) {
+        printf("Error : Input Arguments : <numOfThreads> <graph filename> <numVertex> <numIter> <outFileName>\n");
         exit(0);
     }
 
     numThreads = atoi(argv[1]);
-    strcpy(filename, argv[2]);
+    filename = argv[2];
     numVertex = atoi(argv[3]);
     numIter = atoi(argv[4]);
+    outFileName = argv[5];
 
     if (checkInputArgs(numThreads, numVertex, numIter) == 1){
         exit(0);
     }
 
     g = graph_new(numVertex);       /* Create and initialize a graph instance */
-    readInputDataset(filename, g);  /* Read Iput Dataset of Graph. */
+    g = readInputDataset(filename, g);  /* Read Iput Dataset of Graph. */
     
-    pageRank_setGraph(g);           /* Pass the graph inside the Pagerank class */          
-
-    pageRank_init();
+    pageRank_init(g, numThreads);   /* PageRank Class Initialization */
 
     start = clock();
 
-    for(i=0; i< numIter; i++) {
-        for (threadId=0; threadId < numThreads; threadId ++) {
-            
-            /* Run pagerank here */
-            pthread_create(&thread_handle[threadId], NULL, pageRank_run, &threadId);
-        }
+    for(i=0; i<numIter; i++) {
+       for (threadId=0; threadId < numThreads; threadId++) {
+           
+           /* Run pagerank here */
+           pthread_create(&thread_handle[threadId], NULL, pageRank_run, (void *)threadId);
+       } 
 
-        for (threadId = 0; threadId < numThreads; threadId++) {
-            pthread_join(thread_handle[threadId], NULL);
-        }
+       for (threadId = 0; threadId < numThreads; threadId++) {
+           pthread_join(thread_handle[threadId], NULL);
+       }
+
+       pageRank_update();
     }
 
     end = clock();
 
     elapsed = (double) (end - start) / CLOCKS_PER_SEC;
 
-    printf("\nTotal Time Program Running = %f \n", elapsed);
+    printf("%d\t%f\n", numThreads, elapsed);
 
-    /*
-     * Print all the propabilities of the graph 
-     * Put here the code of printing.
-     * print will be a function inside the graph.
-     *
-     */
+    g = pageRank_getGraph();
+
+    printToFile(g,outFileName);
+
+    // graph_printToFile(g, outFileName);
+
+    graph_removeAll(g);
+
+    return 0;
 }
