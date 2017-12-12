@@ -151,7 +151,7 @@ int main(int argc, char **argv){
 
     end = clock();
 
-    elapsed = (double) (end - start) / CLOCKS_PER_SEC;
+    elapsed = (double) (end - start) / (CLOCKS_PER_SEC/1000);
 
     printf("%d\t%f\n", numThreads, elapsed);
 

@@ -1,20 +1,35 @@
 #! /bin/bash 
-input[0]="twitter"
-intput[1]="socEpinions"
-input[2]="liveJournal"
+dataset[0]="datasets/graph_1000_10000.txt"
+dataset[1]="datasets/graph_10000_1000000.txt"
+dataset[2]="dataset/graph_10000_10000000.txt"
 
-dataset[0]="twitter"
-dataset[1]="socEpinions"
-dataset[2]="liveJournal"
-
-for ((i=0; i>3; i++)); do
-    for ((j=32; j<1024; j=j*2)); do
-        ./pagerank_exe \
-            ${j} \
-            ${input[$i]} \
-            100 \
-            10 \
-            result_${dataset[$i]}.csv \
-            >> timeStamps.csv
-    done
+for ((j=2; j<64; j=j*2)); do
+    ./pagerank_exe \
+    ${j} \
+    ${dataset[0]} \
+    1000 \
+    10 \
+    result_graph_1000_10000.csv \
+    >> timeStamps.csv
 done
+
+for ((j=2; j<64; j=j*2)); do
+    ./pagerank_exe \
+    ${j} \
+    ${dataset[1]} \
+    10000 \
+    10 \
+    result_graph_10000_1000000.csv \
+    >> timeStamps.csv
+done
+
+for ((j=2; j<64; j=j*2)); do
+    ./pagerank_exe \
+    ${j} \
+    ${dataset[2]} \
+    10000 \
+    10 \
+    result_graph_10000_10000000.csv \
+    >> timeStamps.csv
+done
+
