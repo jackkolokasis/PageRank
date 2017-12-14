@@ -31,7 +31,7 @@ extern void* pageRank_run(void *arguments);
  * @param arguments The thread Id
  *
  */
-extern void pageRank_update();
+extern void* pageRank_update(void *arguments);
 
 /*
  * Get the Grapha with the probapilities of each vertex

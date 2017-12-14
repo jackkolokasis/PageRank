@@ -57,7 +57,7 @@ void pageRank_init(Graph *g, int threads){
  */
 
 void* pageRank_run(void *arguments){
-    int tId = (int) arguments;        /* Thread Id */
+    int tId = (int) arguments;      /* Thread Id */
     int l_bound;                    /* Lower Bound */
     int u_bound;                    /* Upper Bound */
     int numVertex = graph_numVertices(_Graph);   /* Total Vertex */
@@ -87,10 +87,15 @@ void* pageRank_run(void *arguments){
         
         for (j=0; j<inDegree; j++){
             tmpvId = graph_getVertexNeighborId(_Graph, i, j, 0);
-            sum = sum + (graph_getVertexProb(_Graph, tmpvId) / graph_outDegree(_Graph, tmpvId));
-            }
+            // if (graph_outDegree(_Graph, tmpvId) == 0){
+              //  continue;
+           // }
+           // else{
+                sum = sum + (graph_getVertexProb(_Graph, tmpvId) / graph_outDegree(_Graph, tmpvId));
+           // }
+        }
 
-        prob = constProb + sum;
+        prob = constProb + (0.85 * sum);
 
         graph_setVertexProb(_Graph, i, prob, 0);
     }
@@ -103,13 +108,30 @@ void* pageRank_run(void *arguments){
  * one.
  *
  */
-void pageRank_update(){
-    int i;
-    int vertices = graph_numVertices(_Graph);
+void* pageRank_update(void *arguments){
+    int tId = (int) arguments;      /* Thread Id */
+    int l_bound;                    /* Lower Bound */
+    int u_bound;                    /* Upper Bound */
+    int numVertex = graph_numVertices(_Graph);   /* Total Vertex */
 
-    for (i=0; i<vertices; i++){
+    int i;
+//    int vertices = graph_numVertices(_Graph);
+    
+    l_bound = (numVertex/totalThreads) *(tId);
+    u_bound = l_bound + (numVertex/totalThreads);
+
+    if (tId == (totalThreads - 1)){
+        u_bound = u_bound + numVertex%totalThreads;
+    }
+
+    for(i=l_bound; i<u_bound; i++){
         graph_updateVertexProb(_Graph, i);
     }
+
+//    for (i=0; i<vertices; i++){
+//        graph_updateVertexProb(_Graph, i);
+//    }
+    return NULL;
 }
 
 /*

@@ -6,6 +6,7 @@
 #include <string.h>
 #include <pthread.h>
 #include "pagerank.h"
+#include <sys/time.h>
 
 #define MAX 1024
 #define _ERROR 1
@@ -101,17 +102,15 @@ void printToFile(Graph *g, char *filename){
 }
 
 int main(int argc, char **argv){
-    char *filename = NULL;              /* Graph input datase file name */
+    char *filename = NULL;       /* Graph input datase file name */
     int numVertex;               /* Number of vertex */
     int numIter;                 /* Number of iterations */
     int i;                       /* Counter */
     int threadId;                /* Thread Counter */
     Graph *g;                    /* Graph object */
     pthread_t thread_handle[1024];    /* Maximum number of threads */
-    clock_t start, end;          /* Start and End time variables */
-    double elapsed;              /* Elapsed Time */
     char *outFileName = NULL;           /* Output File Name */
-
+    struct timeval tv1, tv2;
     /* Check Input arguments */
     if (argc < 6) {
         printf("Error : Input Arguments : <numOfThreads> <graph filename> <numVertex> <numIter> <outFileName>\n");
@@ -133,8 +132,8 @@ int main(int argc, char **argv){
     
     pageRank_init(g, numThreads);   /* PageRank Class Initialization */
 
-    start = clock();
-
+    gettimeofday(&tv1, NULL); 
+    
     for(i=0; i<numIter; i++) {
        for (threadId=0; threadId < numThreads; threadId++) {
            
@@ -145,15 +144,24 @@ int main(int argc, char **argv){
        for (threadId = 0; threadId < numThreads; threadId++) {
            pthread_join(thread_handle[threadId], NULL);
        }
+       
+       for (threadId=0; threadId < numThreads; threadId++) {
+           
+           /* Run pagerank here */
+           pthread_create(&thread_handle[threadId], NULL, pageRank_update, (void *)threadId);
+       } 
 
-       pageRank_update();
+       for (threadId = 0; threadId < numThreads; threadId++) {
+           pthread_join(thread_handle[threadId], NULL);
+       }
+
+       //pageRank_update();
     }
 
-    end = clock();
+    gettimeofday(&tv2, NULL); 
 
-    elapsed = (double) (end - start) / (CLOCKS_PER_SEC/1000);
-
-    printf("%d\t%f\n", numThreads, elapsed);
+    printf("%d\t%f\n", numThreads, (double)(tv2.tv_usec - tv1.tv_usec) / 1000000 +
+            (double)(tv2.tv_sec - tv1.tv_sec));
 
     g = pageRank_getGraph();
 

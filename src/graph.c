@@ -146,7 +146,7 @@ void graph_printToFile(Graph *g, char *fileName){
     int numVertex;
     int outDegree;
     int inDegree;
-    int i, j, k;
+    int i, j;
     FILE *file;
 
     file = fopen(fileName, "w+");

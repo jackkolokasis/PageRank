@@ -18,9 +18,9 @@ generateGraph.o: generateGraph.c
 	$(CC) $(CFLAGS) -c generateGraph.c -o generateGraph.o
 
 generate: 
-	./graphGen_exe 1000 10000 graph_1000_10000.txt
-	./graphGen_exe 10000 1000000 graph_10000_1000000.txt
 	./graphGen_exe 10000 10000000 graph_10000_10000000.txt
+	./graphGen_exe 10000 1000000 graph_10000_1000000.txt
+	./graphGen_exe 100000 20000000 graph_100k_20m.txt
 
 clean:
 	rm -rf *.o grapGen_exe
