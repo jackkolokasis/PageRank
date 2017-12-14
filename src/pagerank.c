@@ -87,12 +87,12 @@ void* pageRank_run(void *arguments){
         
         for (j=0; j<inDegree; j++){
             tmpvId = graph_getVertexNeighborId(_Graph, i, j, 0);
-            // if (graph_outDegree(_Graph, tmpvId) == 0){
-              //  continue;
-           // }
-           // else{
+            if (graph_outDegree(_Graph, tmpvId) == 0){
+                continue;
+            }
+            else{
                 sum = sum + (graph_getVertexProb(_Graph, tmpvId) / graph_outDegree(_Graph, tmpvId));
-           // }
+            }
         }
 
         prob = constProb + (0.85 * sum);
