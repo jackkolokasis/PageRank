@@ -102,15 +102,16 @@ void printToFile(Graph *g, char *filename){
 }
 
 int main(int argc, char **argv){
-    char *filename = NULL;       /* Graph input datase file name */
-    int numVertex;               /* Number of vertex */
-    int numIter;                 /* Number of iterations */
-    int i;                       /* Counter */
-    int threadId;                /* Thread Counter */
-    Graph *g;                    /* Graph object */
-    pthread_t thread_handle[1024];    /* Maximum number of threads */
-    char *outFileName = NULL;           /* Output File Name */
+    char *filename = NULL;           /* Graph input datase file name */
+    int numVertex;                   /* Number of vertex */
+    int numIter;                     /* Number of iterations */
+    int i;                           /* Counter */
+    int threadId;                    /* Thread Counter */
+    Graph *g;                        /* Graph object */
+    pthread_t thread_handle[1024];   /* Maximum number of threads */
+    char *outFileName = NULL;        /* Output File Name */
     struct timeval tv1, tv2;
+    
     /* Check Input arguments */
     if (argc < 6) {
         printf("Error : Input Arguments : <numOfThreads> <graph filename> <numVertex> <numIter> <outFileName>\n");
