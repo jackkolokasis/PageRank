@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "pagerank.h"
 #include "graph.h"
 #include <stdlib.h>
@@ -19,7 +20,7 @@ int totalThreads;
 void pageRank_init(Graph *g, int threads){
     int i;
     int numVertex;    
-    double prob;
+//    double prob;
 
     #ifdef DEBUG_T
     printf("\n================================\n");
@@ -28,13 +29,13 @@ void pageRank_init(Graph *g, int threads){
     #endif
    
     _Graph = g;
-    numVertex = graph_numVertices(_Graph);
+//    numVertex = graph_numVertices(_Graph);
     totalThreads = threads;
-    prob = 1.0/numVertex;
-
-    for (i=0; i<numVertex; i++){
-        graph_setVertexProb(_Graph, i, prob, 1);
-    }
+//    prob = 1.0/numVertex;
+//
+//    for (i=0; i<numVertex; i++){
+//        graph_setVertexProb(_Graph, i, prob, 1);
+//    }
 
     #ifdef DEBUG_T
     printf("\n================================\n");
@@ -57,15 +58,34 @@ void pageRank_init(Graph *g, int threads){
  */
 
 void* pageRank_run(void *arguments){
-    int tId = (int) arguments;      /* Thread Id */
-    int l_bound;                    /* Lower Bound */
-    int u_bound;                    /* Upper Bound */
-    int numVertex = graph_numVertices(_Graph);   /* Total Vertex */
+    int tId = (int) arguments;                   /* Thread Id      */
+    int l_bound;                                 /* Lower Bound    */
+    int u_bound;                                 /* Upper Bound    */
+    int numVertex = graph_numVertices(_Graph);   /* Total Vertex   */
     int i, j;
-    double constProb;
+    double constProb;                            /* Dumby Prob     */
     double sum, prob;
     int inDegree, tmpvId;
+    cpu_set_t cpuset;                            /* Set CPU to Run */
+    pthread_t thread;                            /* Thread         */
+    
+    CPU_ZERO(&cpuset);
+    if (tId >=0 && tId <8){
+        CPU_SET(tId, &cpuset);
+    }
+    else if(tId >=8 && tId <16){
+        CPU_SET(tId+8, &cpuset);
+    }
+    else if(tId >=16 && tId <24){
+        CPU_SET(tId-8, &cpuset);
+    }
+    else{
+        CPU_SET(tId+8, &cpuset);
+    }
 
+    thread = pthread_self();
+    pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset);
+    
     l_bound = (numVertex/totalThreads) *(tId);
     u_bound = l_bound + (numVertex/totalThreads);
    
@@ -115,6 +135,27 @@ void* pageRank_update(void *arguments){
     int numVertex = graph_numVertices(_Graph);   /* Total Vertex */
 
     int i;
+
+    cpu_set_t cpuset;                            /* Set CPU to Run */
+    pthread_t thread;                            /* Thread         */
+    
+    CPU_ZERO(&cpuset);
+    if (tId >=0 && tId <8){
+        CPU_SET(tId, &cpuset);
+    }
+    else if(tId >=8 && tId <16){
+        CPU_SET(tId+8, &cpuset);
+    }
+    else if(tId >=16 && tId <24){
+        CPU_SET(tId-8, &cpuset);
+    }
+    else{
+        CPU_SET(tId+8, &cpuset);
+    }
+
+    thread = pthread_self();
+    pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset);
+
 //    int vertices = graph_numVertices(_Graph);
     
     l_bound = (numVertex/totalThreads) *(tId);
