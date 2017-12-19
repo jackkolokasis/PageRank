@@ -68,8 +68,14 @@ void* pageRank_run(void *arguments){
     int inDegree, tmpvId;
     cpu_set_t cpuset;                            /* Set CPU to Run */
     pthread_t thread;                            /* Thread         */
-    
+    int array[32] = {0,8,16,24,1,9,17,25,
+                     2,10,18,26,3,11,19,27,
+                     4,12,20,28,5,13,21,29,
+                     6,14,22,30,7,15,23,31};
     CPU_ZERO(&cpuset);
+    CPU_SET(array[tId], &cpuset); 
+    
+    /*
     if (tId >=0 && tId <8){
         CPU_SET(tId, &cpuset);
     }
@@ -81,7 +87,7 @@ void* pageRank_run(void *arguments){
     }
     else{
         CPU_SET(tId+8, &cpuset);
-    }
+    } */
 
     thread = pthread_self();
     pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset);
@@ -138,7 +144,13 @@ void* pageRank_update(void *arguments){
 
     cpu_set_t cpuset;                            /* Set CPU to Run */
     pthread_t thread;                            /* Thread         */
-    
+    int array[32] = {0,8,16,24,1,9,17,25,
+                     2,10,18,26,3,11,19,27,
+                     4,12,20,28,5,13,21,29,
+                     6,14,22,30,7,15,23,31};
+    CPU_ZERO(&cpuset);
+    CPU_SET(array[tId], &cpuset); 
+/*
     CPU_ZERO(&cpuset);
     if (tId >=0 && tId <8){
         CPU_SET(tId, &cpuset);
@@ -152,7 +164,7 @@ void* pageRank_update(void *arguments){
     else{
         CPU_SET(tId+8, &cpuset);
     }
-
+*/
     thread = pthread_self();
     pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset);
 
