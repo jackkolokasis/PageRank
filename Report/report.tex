@@ -100,16 +100,98 @@ In this work we try to measure the overheads from this distributed platforms.
 In order to achieve this target, we get the PageRank algorithm. Implement a
 multitheading version on shared memmory and try to compare the run time
 execution with the available implemented version on Spark GraphX. The
-implementation of the 
+implementation of the GraphX is th
 
 
 %----------------------------------------------------------------------------------------
 %       Methodolodgy
 %----------------------------------------------------------------------------------------
+\subsection{Pagerank}
+Pagerank is a computation on directed graphs wich iteratively updates a rank
+maintained for each vertex. In each iteration a vertex rank is uniformly
+devided among it's outgoing neighbors and then set to be the accumulated of
+scaled rank from incoming neighbors. A dumby fuctor alpha is applied to the
+ranks.
+
+Initialize all the node with a default probability: 
+$$PR(p_i;0) = \frac{1}{N}$$
+                
+For every node in the graph calculate a rank on every iteration: 
+$$PR(p_i;{t+1}) = \frac{1-d}{N} + d\sum_{p_j\inM(p_i)}\frac{PR(p_j)}{out(p_j)}$$ 
+
+\subsection{Multithreading PageRank}
+
+The implementation of the algorithm is written in C language and use the PThread
+Library. At the begining the algorithm read an input edge list file which
+represent the graph. At this step is create the graph as an adjency matrix in
+memory and keep all the informations about each vertex neigbor (in neighbors and
+out neighbors). At the same time the application initialize evety vertex of the
+graph with an initial probability. 
+
+Then we pass to the phase, where the graph is ready and we will start the
+PageRank executions. We select to run the algorithm for 10 fixed iteration
+steps. At every step we create a number of threads as we want and assign to
+every thread to compute the Pagerank of some nodes. We assign every vertex to
+run on a different processor in order to achieve better parallelization.
+
+In the next phase, after the threads execution finish we update all the old
+probabilities with the new one. And then continue along to finish all the
+iterations.
+
+At the end, after the computation complete we get an output file in the format
+of <node Id> <Rank>. 
+
+\subsection{GraphX PageRank}
+GraphX is a Spark API for graphs and distributed graph parallel computations.
+GraphX is extends the Spark RDD abstraction by introducing the Resiliant
+Distributed Property Graph, which is a directed multigraph with properties
+attached to each vertex and edge. The vertex exchange messages between them
+locally and across the clusters to perform different computations.
+
+At first GraphX read an input graph dataset of the format <src> <dst>. Where is
+a directed graph from source Id to the destination Id. Construct the graph and
+assign a partition of the graph to each worker. The we are ready to start the
+computation of the pagerank algorithm.
+
+GraphX Pagerank implementations use Pregel interface and run the algorithm for a
+fixed number of iterations. At the start initialize the pagerankGraph with each
+edge attribute having weight 1/outDegree and each vertex with attribute 1.0.
+Then compute the outgoing rank contributions of each vertex, by performing local
+preaggregation, and do the final aggregation at the receiving vertices.  After
+that require a shuffle for aggregation. Apply the final rank updates to get the
+new ranks, using join to preserve ranks of vertices that didn't receive a
+message.  Requires a shuffle for broadcasting updated ranks to the edge
+partitions.
 
 %----------------------------------------------------------------------------------------
 %	Experimental Setup
 %----------------------------------------------------------------------------------------
+\section{Experimental Setup}
+In order to perform our experiments we generate two datasets as shown in
+\ref{tab:dataset}. We run our experiment on a machine with Intel(R) Xeon(R) CPU
+E5-2630 V3 @ 2.40GHz CPU, 32 number of cores, 256GB total memory with CentOS
+Linux 7 (Core) OS. 
+About multithreading implementation of Pagerank we test it
+using 1, 2, 4, 8, 16, 32 number of threads respectively executing each thread on
+a different core (one thread per core). According to the GraphX Pagerank
+Implementation we run two different experiments on a single node in order to be
+comparable with the multithreading implementation. 
+
+
+\begin{table}
+\centering
+    \begin{tabular}{|l|c|c|c|}
+        \hline
+        \textbf{Dataset} &\textbf{Vertex} &\textbf{Edges} \\
+        \hline
+        Dataset1  &10,000  &10,000,000 \\
+        \hline
+        Dataset2   &100,000  &20,000,000 \\
+        \hline
+    \end{tabular}
+    \caption{Input Datasets}
+    \label{tab:dataset}
+\end{table}
 
 %----------------------------------------------------------------------------------------
 %	Results
