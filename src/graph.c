@@ -15,7 +15,7 @@ Graph* graph_new(int v_size){
     g->v = malloc(v_size*sizeof(Vertex));
 
     for(i=0; i< g->v_size; i++){
-        g->v[i].prob_0 = 1/v_size;
+        g->v[i].prob_0 = 1.0;
         g->v[i].prob_1 = 0.0;
         g->v[i].outDegree = 0;
         g->v[i].inDegree = 0;
