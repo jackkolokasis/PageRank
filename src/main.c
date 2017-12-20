@@ -129,13 +129,21 @@ int main(int argc, char **argv){
         exit(0);
     }
 
-    g = graph_new(numVertex);       /* Create and initialize a graph instance */
-    g = readInputDataset(filename, g);  /* Read Iput Dataset of Graph. */
+    /* Create and initialize a graph instance */
+    g = graph_new(numVertex);   
     
-    pageRank_init(g, numThreads);   /* PageRank Class Initialization */
+    /* Read Iput Dataset of Graph. */
+    g = readInputDataset(filename, g);      
+   
+    /* PageRank Class Initialization */
+    pageRank_init(g, numThreads);       
 
-    gettimeofday(&tv1, NULL); 
-    
+    /* Timestamp start */
+    gettimeofday(&tv1, NULL);            
+   
+    /* 
+     * Start running pagerank algorithm ...
+     */
     for(i=0; i<numIter; i++) {
        for (threadId=0; threadId < numThreads; threadId++) {
            
@@ -149,28 +157,28 @@ int main(int argc, char **argv){
        
        for (threadId=0; threadId < numThreads; threadId++) {
            
-           /* Run pagerank here */
+           /* Update the old probabilities with the new */
            pthread_create(&thread_handle[threadId], NULL, pageRank_update, (void *)threadId);
        } 
 
        for (threadId = 0; threadId < numThreads; threadId++) {
            pthread_join(thread_handle[threadId], NULL);
        }
-
-       //pageRank_update();
     }
 
+    /* Timestamp stop */
     gettimeofday(&tv2, NULL); 
 
+    /* Print the execution time of the algorithm */
     printf("%d\t%f\n", numThreads, (double)(tv2.tv_usec - tv1.tv_usec) / 1000000 +
             (double)(tv2.tv_sec - tv1.tv_sec));
 
     g = pageRank_getGraph();
 
+    /* Print the ranks of each vertex to the output file */
     printToFile(g,outFileName);
 
-    // graph_printToFile(g, outFileName);
-
+    /* Free memmory */
     graph_removeAll(g);
 
     return 0;

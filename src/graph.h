@@ -1,13 +1,6 @@
 #ifndef __GRAPH_H_
 #define __GRAPH_H_
 
-/* 
- * May change the structure of the graph
- *
- * from id to 
- *
- */
-
 typedef struct _vertex{
     double prob_0;
     double prob_1;

@@ -18,9 +18,6 @@ int totalThreads;
  */
 
 void pageRank_init(Graph *g, int threads){
-    int i;
-    int numVertex;    
-//    double prob;
 
     #ifdef DEBUG_T
     printf("\n================================\n");
@@ -29,13 +26,7 @@ void pageRank_init(Graph *g, int threads){
     #endif
    
     _Graph = g;
-//    numVertex = graph_numVertices(_Graph);
     totalThreads = threads;
-//    prob = 1.0/numVertex;
-//
-//    for (i=0; i<numVertex; i++){
-//        graph_setVertexProb(_Graph, i, prob, 1);
-//    }
 
     #ifdef DEBUG_T
     printf("\n================================\n");
@@ -68,14 +59,17 @@ void* pageRank_run(void *arguments){
     int inDegree, tmpvId;
     cpu_set_t cpuset;                            /* Set CPU to Run */
     pthread_t thread;                            /* Thread         */
-    int array[32] = {0,8,16,24,1,9,17,25,
+    
+    #ifdef NUMA_SOCKARR
+    int array[32] = {0,8,16,24,1,9,17,25,        /* Select according to thread Id on wich core to run */
                      2,10,18,26,3,11,19,27,
                      4,12,20,28,5,13,21,29,
                      6,14,22,30,7,15,23,31};
     CPU_ZERO(&cpuset);
-    CPU_SET(array[tId], &cpuset); 
+    CPU_SET(array[tId], &cpuset);
+    #endif
     
-    /*
+    #ifndef NUMA_SOCARR 
     if (tId >=0 && tId <8){
         CPU_SET(tId, &cpuset);
     }
@@ -87,8 +81,9 @@ void* pageRank_run(void *arguments){
     }
     else{
         CPU_SET(tId+8, &cpuset);
-    } */
-
+    }
+    #endif
+    
     thread = pthread_self();
     pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset);
     
@@ -135,22 +130,26 @@ void* pageRank_run(void *arguments){
  *
  */
 void* pageRank_update(void *arguments){
-    int tId = (int) arguments;      /* Thread Id */
-    int l_bound;                    /* Lower Bound */
-    int u_bound;                    /* Upper Bound */
-    int numVertex = graph_numVertices(_Graph);   /* Total Vertex */
+    int tId = (int) arguments;                   /* Thread Id       */
+    int l_bound;                                 /* Lower Bound     */
+    int u_bound;                                 /* Upper Bound     */
+    int numVertex = graph_numVertices(_Graph);   /* Total Vertex    */
 
     int i;
 
-    cpu_set_t cpuset;                            /* Set CPU to Run */
-    pthread_t thread;                            /* Thread         */
-    int array[32] = {0,8,16,24,1,9,17,25,
+    cpu_set_t cpuset;                            /* Set CPU to Run  */
+    pthread_t thread;                            /* Thread          */
+    
+    #ifdef NUMA_SOCKARR
+    int array[32] = {0,8,16,24,1,9,17,25,        /* Select according to thread Id on wich core to run */
                      2,10,18,26,3,11,19,27,
                      4,12,20,28,5,13,21,29,
                      6,14,22,30,7,15,23,31};
     CPU_ZERO(&cpuset);
     CPU_SET(array[tId], &cpuset); 
-/*
+    #endif
+
+    #ifndef NUMA_SOCKARR
     CPU_ZERO(&cpuset);
     if (tId >=0 && tId <8){
         CPU_SET(tId, &cpuset);
@@ -164,11 +163,11 @@ void* pageRank_update(void *arguments){
     else{
         CPU_SET(tId+8, &cpuset);
     }
-*/
+    #endif
+    
     thread = pthread_self();
     pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset);
 
-//    int vertices = graph_numVertices(_Graph);
     
     l_bound = (numVertex/totalThreads) *(tId);
     u_bound = l_bound + (numVertex/totalThreads);
@@ -181,9 +180,6 @@ void* pageRank_update(void *arguments){
         graph_updateVertexProb(_Graph, i);
     }
 
-//    for (i=0; i<vertices; i++){
-//        graph_updateVertexProb(_Graph, i);
-//    }
     return NULL;
 }
 

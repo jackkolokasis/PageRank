@@ -2,10 +2,18 @@
 #include <stdlib.h>
 #include <time.h>
 
+/* 
+ * Print the generated Graph in an output file
+ *
+ * @param fileName  : Name of the output file
+ * @param matrix    : Matrix containing the graph.
+ * @param numVertices: Total number of vertex of the graph
+ */
 void printToFile(char *fileName, int **matrix, int numVertices){
-    FILE *file;
+    FILE *file;     /* File descriptor  */
     int i, j;
 
+    /* Open the file to append the graph */
     file = fopen(fileName, "w+");
 
     for(i=0; i<numVertices; i++){
@@ -16,33 +24,31 @@ void printToFile(char *fileName, int **matrix, int numVertices){
         }
     }
 
+    /* Close the file */
     fclose(file);
 }
 
-void main(int argc, char* argv[]){
-    int **matrix;
-    int numVertices;
-    int numEdges;
-    int i, j, counter;
-    char *filename;
+int main(int argc, char* argv[]){
+    int **matrix;           /* Matrix to save the generated graph */
+    int numVertices;        /* Total number of vertices           */
+    int numEdges;           /* Total number of edges              */
+    int i, j, counter;      
+    char *filename;         /* Output filename                    */
 
     numVertices = atoi(argv[1]);
     numEdges = atoi(argv[2]);
     filename = argv[3];
-
+    
+    /* Allocate memmory for the matrix */
     matrix = (int **) calloc(numVertices, sizeof(int *)); 
     for(i=0; i<numVertices; i++){
         matrix[i] = (int *)calloc(numVertices, sizeof(int));
     }
 
-    /*
-     * 10000 * 10000
-     * edges : 1000 000
-     *
-     */
-
+    /* Generate the new graph */
     counter = 0;
     srand(time(NULL));
+
     while(counter < numEdges){
         i = rand()%numVertices;
         j = rand()%numVertices;
@@ -59,7 +65,10 @@ void main(int argc, char* argv[]){
         }
     }
 
+    /* Save us file */
     printToFile(filename, matrix, numVertices);
+
+    return 0;
 
 }
 

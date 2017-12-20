@@ -23,5 +23,8 @@ generate:
 	./graphGen_exe 100000 20000000 graph_100k_20m.txt
 
 clean:
-	rm -rf *.o grapGen_exe
+	rm -rf *.o graphGen_exe
+
+removeAll:
+	rm -rf *o graphGen_exe graph_*
 
