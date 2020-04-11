@@ -1,4 +1,4 @@
-# Multithreading Pagrank Implementation
+# Pagrank
 
 This project provides implementation of PageRank algorithm on multithreading
 version on shared memory. This implementation evaluates and run on cluster
